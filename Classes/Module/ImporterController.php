@@ -168,7 +168,7 @@ final class ImporterController extends MainController
     protected function moduleContent(): array
     {
         $output = [
-            'title' => '',
+            'title' => $this->languageService->sL($this->lllFile . ':mailgroup_import'),
             'subtitle' => '',
             'upload' => [
                 'show' => false,
@@ -596,8 +596,6 @@ final class ImporterController extends MainController
                 $output['upload']['newFile'] = $this->indata['newFile'] ?? '';
                 $output['upload']['newFileUid'] = $this->indata['newFileUid'] ?? 0;
         }
-
-        $output['title'] = $this->languageService->sL($this->lllFile . ':mailgroup_import');
 
          /** @var ImporterOutputEvent $event */
          $event = $this->eventDispatcher->dispatch(

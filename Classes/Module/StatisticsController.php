@@ -119,7 +119,7 @@ final class StatisticsController extends MainController
 
         $table = (string)($parsedBody['table'] ?? $queryParams['table'] ?? '');
         if (in_array($table, $this->tables)) {
-            $this->table = (string)($table);
+            $this->table = $table;
         }
 
         $this->recalcCache = (bool)($parsedBody['recalcCache'] ?? $queryParams['recalcCache'] ?? false);
@@ -1691,18 +1691,15 @@ final class StatisticsController extends MainController
     protected function disableRecipients(array $arr, string $table): int
     {
         $count = 0;
-        if ($GLOBALS['TCA'][$table]) {
-            $enField = $GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'];
-            if ($enField) {
-                $count = count($arr);
-                $uidList = array_keys($arr);
-                if (count($uidList)) {
-                    $values = [];
-                    $values[$enField] = 1;
-                    GeneralUtility::makeInstance(TempRepository::class)->updateRows($table, $uidList, $values);
-                }
+        $disabledField = $GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'] ?? null;
+        if ($disabledField) {
+            $count = count($arr);
+            $recordUids = array_keys($arr);
+            if (count($recordUids)) {
+                $updateFields[$disabledField] = 1;
+                GeneralUtility::makeInstance(TempRepository::class)->updateRows($table, $recordUids, $updateFields);
             }
         }
-        return (int)$count;
+        return $count;
     }
 }

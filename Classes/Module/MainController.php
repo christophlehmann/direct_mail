@@ -296,11 +296,6 @@ class MainController
         return Environment::getPublicPath() . '/typo3temp/';
     }
 
-    protected function getDmailerLockFilePath(): string
-    {
-        return $this->getTempPath() . 'tx_directmail_cron.lock';
-    }
-
     protected function getIconActionsOpen(): Icon
     {
         return $this->iconFactory->getIcon('actions-open', Icon::SIZE_SMALL);

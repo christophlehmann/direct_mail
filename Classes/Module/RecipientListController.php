@@ -66,7 +66,6 @@ final class RecipientListController extends MainController
         protected string $table = '',
         protected array $indata = [],
 
-        
         protected $requestUri = '',
         
         protected array $allowedTables = ['tt_address', 'fe_users'],
@@ -689,7 +688,7 @@ final class RecipientListController extends MainController
                 'queryLimitDisabled' => $queryLimitDisabled,
             ];
 
-            $done = GeneralUtility::makeInstance(SysDmailGroupRepository::class)->updateSysDmailGroupRecord((int)$mailGroup['uid'], $updateFields);
+            GeneralUtility::makeInstance(SysDmailGroupRepository::class)->updateSysDmailGroupRecord((int)$mailGroup['uid'], $updateFields);
             $mailGroup = BackendUtility::getRecord('sys_dmail_group', $mailGroup['uid']);
         }
         return $mailGroup;
@@ -758,7 +757,6 @@ final class RecipientListController extends MainController
                     }
                     $data[$this->table][$this->uid]['module_sys_dmail_html'] = $this->indata['html'] ? 1 : 0;
 
-                    /* @var $dataHandler \TYPO3\CMS\Core\DataHandling\DataHandler*/
                     $dataHandler = $this->getDataHandler();
                     $dataHandler->start($data, []);
                     $dataHandler->process_datamap();
@@ -782,7 +780,7 @@ final class RecipientListController extends MainController
 
         $row = $rows[0] ?? [];
 
-        if (is_array($row) && count($row)) {
+        if ($row !== []) {
             $mmTable = $GLOBALS['TCA'][$this->table]['columns']['module_sys_dmail_category']['config']['MM'];
             $resCat = GeneralUtility::makeInstance(TempRepository::class)->getDisplayUserInfo((string)$mmTable, (int)$row['uid']);
             $categoriesArray = [];

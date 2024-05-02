@@ -63,8 +63,6 @@ final class ConfigurationController extends MainController
         $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
         $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
         $this->access = is_array($this->pageinfo) ? true : false;
-
-        $normalizedParams = $request->getAttribute('normalizedParams');
         $this->pageTS = $parsedBody['pageTS'] ?? $queryParams['pageTS'] ?? [];
         $this->submit = isset($parsedBody['submit']) ? true : false;
 
