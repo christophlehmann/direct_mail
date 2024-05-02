@@ -60,7 +60,7 @@ final class RecipientListController extends MainController
         protected string $csv = '',
         protected array $set = [],
 
-        protected array $MOD_SETTINGS = [],
+        protected array $specialQuerySettings = [],
 
         protected int $uid = 0,
         protected string $table = '',
@@ -71,7 +71,7 @@ final class RecipientListController extends MainController
         protected array $allowedTables = ['tt_address', 'fe_users'],
 
         protected bool $submit = false,
-        protected string $queryConfig = '',
+        protected string|array $queryConfig = '',
     ) {
     }
 
@@ -97,14 +97,14 @@ final class RecipientListController extends MainController
         $this->group_uid = (int)($parsedBody['group_uid'] ?? $this->queryParams['group_uid'] ?? 0);
         $this->lCmd = $parsedBody['lCmd'] ?? $this->queryParams['lCmd'] ?? '';
         $this->csv = $parsedBody['csv'] ?? $this->queryParams['csv'] ?? '';
-        $this->set = is_array($parsedBody['SET'] ?? '') ? $parsedBody['SET'] : [];
+        $this->set = $parsedBody['SET'] ?? [];
 
         $this->uid = (int)($parsedBody['uid'] ?? $this->queryParams['uid'] ?? 0);
         $this->table = (string)($parsedBody['table'] ?? $this->queryParams['table'] ?? '');
         $this->indata = $parsedBody['indata'] ?? $this->queryParams['indata'] ?? [];
         $this->submit = (bool)($parsedBody['submit'] ?? $this->queryParams['submit'] ?? false);
 
-        $this->queryConfig = (string)($parsedBody['queryConfig'] ?? $this->queryParams['queryConfig'] ?? '');
+        $this->queryConfig = $parsedBody['queryConfig'] ?? [];
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         return $this->indexAction($moduleTemplate);
@@ -655,36 +655,36 @@ final class RecipientListController extends MainController
             $table = $this->userTable;
         }
 
-        $this->MOD_SETTINGS['queryTable'] = $queryTable ? $queryTable : $table;
-        $this->MOD_SETTINGS['queryConfig'] = $queryConfig ? serialize($queryConfig) : $mailGroup['query'];
-        $this->MOD_SETTINGS['search_query_smallparts'] = 1;
+        $this->specialQuerySettings['queryTable'] = $queryTable ? $queryTable : $table;
+        $this->specialQuerySettings['queryConfig'] = $queryConfig ? serialize($queryConfig) : $mailGroup['query'];
+        $this->specialQuerySettings['search_query_smallparts'] = 1;
 
-        $this->MOD_SETTINGS['search_query_makeQuery'] = 'all';
-        $this->MOD_SETTINGS['search'] = 'query';
+        $this->specialQuerySettings['search_query_makeQuery'] = 'all';
+        $this->specialQuerySettings['search'] = 'query';
 
-        if ($this->MOD_SETTINGS['queryTable'] != $table) {
-            $this->MOD_SETTINGS['queryConfig'] = '';
+        if ($this->specialQuerySettings['queryTable'] != $table) {
+            $this->specialQuerySettings['queryConfig'] = '';
         }
 
-        $this->MOD_SETTINGS['queryLimit'] = $queryLimit;
+        $this->specialQuerySettings['queryLimit'] = $queryLimit;
 
-        if ($this->MOD_SETTINGS['queryTable'] != $table
-            || $this->MOD_SETTINGS['queryConfig'] != $mailGroup['query']
-            || $this->MOD_SETTINGS['queryLimit'] != $mailGroup['queryLimit']
+        if ($this->specialQuerySettings['queryTable'] != $table
+            || $this->specialQuerySettings['queryConfig'] != $mailGroup['query']
+            || $this->specialQuerySettings['queryLimit'] != $mailGroup['queryLimit']
             || $queryLimitDisabled != $mailGroup['queryLimitDisabled']
         ) {
             $whichTables = 0;
-            if ($this->MOD_SETTINGS['queryTable'] == 'tt_address') {
+            if ($this->specialQuerySettings['queryTable'] == 'tt_address') {
                 $whichTables = 1;
-            } elseif ($this->MOD_SETTINGS['queryTable'] == 'fe_users') {
+            } elseif ($this->specialQuerySettings['queryTable'] == 'fe_users') {
                 $whichTables = 2;
-            } elseif ($this->MOD_SETTINGS['queryTable'] == $this->userTable) {
+            } elseif ($this->specialQuerySettings['queryTable'] == $this->userTable) {
                 $whichTables = 4;
             }
             $updateFields = [
                 'whichtables' => (int)$whichTables,
-                'query' => $this->MOD_SETTINGS['queryConfig'],
-                'queryLimit' => $this->MOD_SETTINGS['queryLimit'],
+                'query' => $this->specialQuerySettings['queryConfig'],
+                'queryLimit' => $this->specialQuerySettings['queryLimit'],
                 'queryLimitDisabled' => $queryLimitDisabled,
             ];
 
@@ -707,16 +707,12 @@ final class RecipientListController extends MainController
             GeneralUtility::makeInstance(UriBuilder::class), 
             $this->moduleTemplateFactory
         );
-        //$queryGenerator->setFormName('dmailform');
         $queryGenerator->setFormName('queryform');
 
-        //if ($this->MOD_SETTINGS['queryTable'] && $this->MOD_SETTINGS['queryConfig']) {
-        //    $queryGenerator->extFieldLists['queryFields'] = 'uid';
-        //}
         $this->pageRenderer->loadJavaScriptModule('@typo3/lowlevel/query-generator.js');
         $this->pageRenderer->loadJavaScriptModule('@typo3/backend/date-time-picker.js');
 
-        [$html, $query] = $queryGenerator->queryMakerDM($this->request, $this->allowedTables);
+        [$html, $query] = $queryGenerator->queryMakerDM($this->request, $this->allowedTables, $this->specialQuerySettings);
         return ['selectTables' => $html, 'query' => $query];
     }
 

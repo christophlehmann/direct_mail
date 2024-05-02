@@ -57,7 +57,7 @@ class DmQueryGenerator extends DatabaseIntegrityController
      *
      * @return array
      */
-    public function queryMakerDM(ServerRequestInterface $request, array $allowedTables = []): array
+    public function queryMakerDM(ServerRequestInterface $request, array $allowedTables = [], $settings = []): array
     {
         if (count($allowedTables)) {
             $this->allowedTables = $allowedTables;
@@ -66,7 +66,7 @@ class DmQueryGenerator extends DatabaseIntegrityController
         $output = '';
         $selectQueryString = '';
         // Query Maker:
-        $this->init('queryConfig', $this->MOD_SETTINGS['queryTable'] ?? '', '', $this->MOD_SETTINGS);
+        $this->init('queryConfig', $settings['queryTable'] ?? '', '', $settings);
         if ($this->formName) {
             $this->setFormName($this->formName);
         }
@@ -83,13 +83,11 @@ class DmQueryGenerator extends DatabaseIntegrityController
                 $selectQueryString = $this->getSelectQuery($queryString);
                 $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($this->table);
 
-                $isConnectionMysql = strpos($connection->getServerVersion(), 'MySQL') === 0;
-                $fullQueryString = '';
                 try {
                     $fullQueryString = $selectQueryString;
                     $dataRows = $connection->executeQuery($selectQueryString)->fetchAllAssociative();
                     //$output .= '<h2>SQL query</h2><div><code>' . htmlspecialchars($fullQueryString) . '</code></div>';
-                    $cPR = $this->getQueryResultCode($mQ, $dataRows, $this->table);
+                    $cPR = $this->getQueryResultCode($mQ, $dataRows, $this->table, $request);
                     $output .= '<h2>' . ($cPR['header'] ?? '') . '</h2><div>' . $cPR['content'] . '</div>';
                 } catch (DBALException $e) {
                     $output .= '<h2>SQL query</h2><div><code>' . htmlspecialchars($fullQueryString) . '</code></div>';
@@ -103,26 +101,17 @@ class DmQueryGenerator extends DatabaseIntegrityController
         return ['<div class="database-query-builder">' . $output . '</div>', $selectQueryString];
     }
 
-    public function getQueryDM(bool $queryLimitDisabled): string
+    public function getQueryDM(array $group, string $table, string $queryFields): string
     {
-        $selectQueryString = '';
-        $this->init('queryConfig', $this->settings['queryTable'] ?? '', '', $this->settings);
-        if ($this->formName) {
-            $this->setFormName($this->formName);
-        }
-        $tmpCode = $this->makeSelectorTable($this->settings, 'query,limit');
-        if ($this->table && is_array($GLOBALS['TCA'][$this->table])) {
-            if ($this->settings['search_query_makeQuery']) {
-                // Show query
-                $this->enablePrefix = true;
-                $queryString = $this->getQuery($this->queryConfig);
-                if($queryLimitDisabled) {
-                    $this->extFieldLists['queryLimit'] = '';
-                }
-                $selectQueryString = $this->getSelectQuery($queryString);
-            }
-        }
-        return $selectQueryString;
+        $this->table = $table;
+        $this->extFieldLists = [
+            'queryFields' => $queryFields,
+            'queryGroup' => '',
+            'queryLimit' => $group['queryLimitDisabled'] ? 0 : (int)$group['queryLimit'],
+            'queryOrder' => ''
+        ];
+        $queryString = $this->getQuery(unserialize($group['query']));
+        return $this->getSelectQuery($queryString);
     }
 
     public function setFormName(string $formName): void
