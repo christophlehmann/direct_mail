@@ -50,7 +50,7 @@ use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 
-final class DmailController extends MainController
+class DmailController extends MainController
 {
 
     protected FlashMessageQueue $flashMessageQueue;
