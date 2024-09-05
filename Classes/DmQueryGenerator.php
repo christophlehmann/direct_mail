@@ -106,13 +106,13 @@ class DmQueryGenerator extends DatabaseIntegrityController
     public function getQueryDM(bool $queryLimitDisabled): string
     {
         $selectQueryString = '';
-        $this->init('queryConfig', $this->settings['queryTable'] ?? '', '', $this->settings);
+        $this->init('queryConfig', $this->settings['queryTable'] ?? '', '', $this->MOD_SETTINGS);
         if ($this->formName) {
             $this->setFormName($this->formName);
         }
-        $tmpCode = $this->makeSelectorTable($this->settings, 'query,limit');
+        $tmpCode = $this->makeSelectorTable($this->MOD_SETTINGS, $GLOBALS['TYPO3_REQUEST'], 'query,limit');
         if ($this->table && is_array($GLOBALS['TCA'][$this->table])) {
-            if ($this->settings['search_query_makeQuery']) {
+            if ($this->MOD_SETTINGS['search_query_makeQuery']) {
                 // Show query
                 $this->enablePrefix = true;
                 $queryString = $this->getQuery($this->queryConfig);
